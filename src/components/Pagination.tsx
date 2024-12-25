@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 
 const Pagination = ({
   page,
-  teachersCount,
+  count,
 }: {
   page: number;
-  teachersCount: number;
+  count: number;
 }) => {
   const router = useRouter();
 
@@ -20,7 +20,7 @@ const Pagination = ({
 
   // disabling buttons logic
   const hasPrev = ITEM_PER_PAGE * (page - 1) > 0;
-  const hasNext = ITEM_PER_PAGE * (page - 1) + ITEM_PER_PAGE < teachersCount;
+  const hasNext = ITEM_PER_PAGE * (page - 1) + ITEM_PER_PAGE < count;
 
   return (
     <div className="p-4 flex items-center justify-between text-gray-500">
@@ -35,7 +35,7 @@ const Pagination = ({
       </button>
       <div className="flex items-center gap-2 text-sm">
         {Array.from(
-          { length: Math.ceil(teachersCount / ITEM_PER_PAGE) },
+          { length: Math.ceil(count / ITEM_PER_PAGE) },
           (_, index) => {
             const pageIndex = index + 1;
             return (
