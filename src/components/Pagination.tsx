@@ -11,7 +11,7 @@ const Pagination = ({
 }) => {
   const router = useRouter();
 
-  // this function takes pageIndex as a parameter from onClick event to change the page
+  // this function takes pageIndex as a parameter from onClick event to change the page and fetch teachers
   const changePage = (pageIndex: number) => {
     const params = new URLSearchParams(window.location.search);
     params.set("page", pageIndex.toString());
@@ -26,7 +26,7 @@ const Pagination = ({
     <div className="p-4 flex items-center justify-between text-gray-500">
       <button
         disabled={!hasPrev}
-        className="py-2 px-5 bg-blue-700 text-white text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        className="py-2 px-5 bg-blue-700 text-white text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-transform duration-300 scale-105 items-center"
         onClick={() => {
           changePage(page - 1);
         }}
@@ -57,7 +57,7 @@ const Pagination = ({
         )}
       </div>
       <button
-        className="py-2 px-5 bg-blue-700 text-white text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        className="py-2 px-5 bg-blue-700 text-white text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-transform duration-300 scale-105 items-center"
         disabled={!hasNext}
         onClick={() => {
           changePage(page + 1);
