@@ -134,7 +134,7 @@ if (queryParams) {
   }
 
   // logic fetching data of teachers
-  const [teachersData, teachersCount] = await prisma.$transaction([
+  const [teachersData, count] = await prisma.$transaction([
     prisma.teacher.findMany({
       where: query,
       include: {
@@ -179,7 +179,7 @@ if (queryParams) {
       <Table columns={columns} renderRow={renderRow} data={teachersData} />
 
       {/* PAGINATION CHILD COMPONENT*/}
-      <Pagination page={pageNum} teachersCount={teachersCount} />
+      <Pagination page={pageNum} count={count} />
     </div>
   );
 };
