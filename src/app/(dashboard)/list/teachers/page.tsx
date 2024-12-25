@@ -5,7 +5,7 @@ import TableSearch from "@/components/TableSearch";
 import { role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Subject, Teacher, Class } from "@prisma/client";
+import { Subject, Teacher, Class, Prisma } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -100,11 +100,43 @@ const TeacherListPage = async ({
   // extracting page number from query params
   const { page, ...queryParams } = searchParams;
 
+  // to set the page number to 1 and fetch teachers if it is not provided in the query params.
   const pageNum = page ? parseInt(page) : 1;
+
+  // An empty object of type Prisma.TeacherWhereInput is initialized to build the query.
+  const query: Prisma.TeacherWhereInput = {};
+
+
+  // A switch statement checks the key and applies specific logic. In this case:
+  // If the key is "classId", and value is "2 or any number" the query.lessons filter is constructed.
+  // The some operator in Prisma checks if any lesson associated with the teacher has the specified classId.
+
+  // If the query includes a classId, it constructs a condition to find teachers who are associated with at least one lesson that belongs to the specified class.
+if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            query.lessons = {
+              some: {
+                classId: parseInt(value),
+              },
+            };
+            break;
+          case "search":
+            query.name = { contains: value, mode: "insensitive" };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
 
   // logic fetching data of teachers
   const [teachersData, teachersCount] = await prisma.$transaction([
     prisma.teacher.findMany({
+      where: query,
       include: {
         subjects: true,
         classes: true,
@@ -115,7 +147,9 @@ const TeacherListPage = async ({
       skip: ITEM_PER_PAGE * (pageNum - 1),
     }),
 
-    prisma.teacher.count(),
+    prisma.teacher.count({
+      where: query,
+    }),
   ]);
 
   return (
