@@ -3,18 +3,12 @@ import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
+import { role } from "@/lib/roleUtils";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { auth } from "@clerk/nextjs/server";
 import { Announcement, Class, Prisma } from "@prisma/client";
 import Image from "next/image";
 
 type AnnouncementList = Announcement & { class: Class };
-
-// getting user detail and role from clerk
-const { sessionClaims } = auth();
-
-// to access role in a server component
-const role = (sessionClaims?.metadata as { role?: string })?.role;
 
 // columns logic
 const columns = [
