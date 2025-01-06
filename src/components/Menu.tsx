@@ -1,7 +1,8 @@
-import { role } from "@/lib/data";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 
+// array of menu items
 const menuItems = [
   {
     title: "MENU",
@@ -117,7 +118,13 @@ const menuItems = [
   },
 ];
 
-const Menu = () => {
+const Menu = async () => {
+  // getting user from clerk
+  const user = await currentUser();
+
+  // user has role object in publicMetadata to show respective menu items in middleware
+  const role = user?.publicMetadata.role as string;
+
   return (
     <div className="mt-4 text-sm">
       {menuItems.map((i) => (
