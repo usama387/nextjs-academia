@@ -2,14 +2,15 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { eventsData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
+import { currentUserId, role } from "@/lib/roleUtils";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Event, Prisma } from "@prisma/client";
 import Image from "next/image";
 
 type EventList = Event & { class: Class };
 
+// table column logic
 const columns = [
   {
     header: "Title",
@@ -34,12 +35,17 @@ const columns = [
     accessor: "endTime",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
+// table row logic
 const renderRow = (item: EventList) => (
   <tr
     key={item.id}
@@ -78,6 +84,7 @@ const renderRow = (item: EventList) => (
     </td>
   </tr>
 );
+
 const EventListPage = async ({
   searchParams,
 }: {
@@ -105,6 +112,24 @@ const EventListPage = async ({
     }
   }
 
+  // Role based conditions for fetching events Conditions:
+  // Teacher: Matches events where the class has lessons taught by the currentUserId.
+  // Student: Matches events where the class includes the currentUserId as a student.
+  // Parent: Matches events where the class has students whose parentId matches the currentUserId.
+  const roleConditions = {
+    teacher: { lessons: { some: { teacherId: currentUserId! } } },
+    student: { students: { some: { id: currentUserId! } } },
+    parent: { students: { some: { parentId: currentUserId! } } },
+  };
+
+  // in first condition the events are fetched when classId is null 
+  query.OR = [
+    { classId: null },
+    {
+      class: roleConditions[role as keyof typeof roleConditions] || {},
+    },
+  ];
+
   const [eventsData, count] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
@@ -116,6 +141,7 @@ const EventListPage = async ({
     }),
     prisma.event.count({ where: query }),
   ]);
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
