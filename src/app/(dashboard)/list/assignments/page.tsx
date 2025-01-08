@@ -2,8 +2,8 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { assignmentsData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
+import { currentUserId, role } from "@/lib/roleUtils";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Assignment, Class, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
@@ -16,6 +16,7 @@ type AssignmentList = Assignment & {
   };
 };
 
+// columns logic
 const columns = [
   {
     header: "Subject Name",
@@ -41,6 +42,7 @@ const columns = [
   },
 ];
 
+// rows logic
 const renderRow = (item: AssignmentList) => (
   <tr
     key={item.id}
@@ -51,16 +53,19 @@ const renderRow = (item: AssignmentList) => (
     <td className="hidden md:table-cell">
       {item.lesson.teacher.name + " " + item.lesson.teacher.surname}
     </td>
-    <td className="hidden md:table-cell"> {new Intl.DateTimeFormat("en-PK").format(item.dueDate)}</td>
+    <td className="hidden md:table-cell">
+      {" "}
+      {new Intl.DateTimeFormat("en-PK").format(item.dueDate)}
+    </td>
     <td>
       <div className="flex items-center gap-2">
-        {role === "admin" ||
-          (role === "teacher" && (
-            <>
-              <FormModal table="assignment" type="update" data={item} />
-              <FormModal table="assignment" type="delete" id={item.id} />
-            </>
-          ))}
+        {/* admin and teacher can both create assignment */}
+        {(role === "admin" || role === "teacher") && (
+          <>
+            <FormModal table="assignment" type="update" data={item} />
+            <FormModal table="assignment" type="delete" id={item.id} />
+          </>
+        )}
       </div>
     </td>
   </tr>
@@ -101,6 +106,33 @@ const AssignmentListPage = async ({
         }
       }
     }
+  }
+
+  // role based assignments fetching
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.lesson.teacherId = currentUserId!;
+      break;
+    case "student":
+      query.lesson.class = {
+        students: {
+          some: {
+            id: currentUserId!,
+          },
+        },
+      };
+    case "parent":
+      query.lesson.class = {
+        students: {
+          some: {
+            parentId: currentUserId!,
+          },
+        },
+      };
+    default:
+      break;
   }
 
   const [assignmentsData, count] = await prisma.$transaction([
