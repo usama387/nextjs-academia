@@ -10,6 +10,7 @@ import Image from "next/image";
 
 type SubjectList = Subject & { teachers: Teacher[] };
 
+// column logic
 const columns = [
   {
     header: "Subject Name",
@@ -20,12 +21,14 @@ const columns = [
     accessor: "teachers",
     className: "hidden md:table-cell",
   },
+
   {
     header: "Actions",
     accessor: "action",
   },
 ];
 
+// row logic
 const renderRow = (item: SubjectList) => (
   <tr
     key={item.id}
@@ -47,6 +50,7 @@ const renderRow = (item: SubjectList) => (
     </td>
   </tr>
 );
+
 const SubjectListPage = async ({
   searchParams,
 }: {
