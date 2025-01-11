@@ -2,8 +2,8 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role } from "@/lib/data";
 import prisma from "@/lib/prisma";
+import { role } from "@/lib/roleUtils";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Subject, Teacher, Class, Prisma } from "@prisma/client";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import Link from "next/link";
 // type safety using prisma client generated types
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
 
+// columns logic passed as props to Table
 const columns = [
   {
     header: "Info",
@@ -42,12 +43,17 @@ const columns = [
     accessor: "address",
     className: "hidden lg:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
+// rows logic passed as props to Table
 const renderRow = (item: TeacherList) => (
   <tr
     key={item.id}
@@ -92,6 +98,7 @@ const renderRow = (item: TeacherList) => (
     </td>
   </tr>
 );
+
 const TeacherListPage = async ({
   searchParams,
 }: {
@@ -106,13 +113,12 @@ const TeacherListPage = async ({
   // An empty object of type Prisma.TeacherWhereInput is initialized to build the query.
   const query: Prisma.TeacherWhereInput = {};
 
-
   // A switch statement checks the key and applies specific logic. In this case:
   // If the key is "classId", and value is "2 or any number" the query.lessons filter is constructed.
   // The some operator in Prisma checks if any lesson associated with the teacher has the specified classId.
 
   // If the query includes a classId, it constructs a condition to find teachers who are associated with at least one lesson that belongs to the specified class.
-if (queryParams) {
+  if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
