@@ -125,7 +125,10 @@ const LessonListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <FormModal table="lesson" type="create" />}
+            {role === "admin" ||
+              (role === "teacher" && (
+                <FormModal table="lesson" type="create" />
+              ))}
           </div>
         </div>
       </div>
