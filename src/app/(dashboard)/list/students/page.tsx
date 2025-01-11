@@ -2,13 +2,14 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role } from "@/lib/data";
 import prisma from "@/lib/prisma";
+import { role } from "@/lib/roleUtils";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
+// type safety with Prisma types
 type StudentList = Student & { class: Class };
 
 // passed to Table component to render columns
@@ -37,10 +38,14 @@ const columns = [
     accessor: "address",
     className: "hidden lg:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
 // passed to Table component to render rows
