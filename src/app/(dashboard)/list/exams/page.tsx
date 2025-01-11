@@ -2,12 +2,13 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role } from "@/lib/data";
 import prisma from "@/lib/prisma";
+import { currentUserId, role } from "@/lib/roleUtils";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Exam, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 
+// type safety with Prisma generated types
 type ExamList = Exam & {
   lesson: {
     subject: Subject;
@@ -16,6 +17,7 @@ type ExamList = Exam & {
   };
 };
 
+// column logic
 const columns = [
   {
     header: "Subject Name",
@@ -35,12 +37,17 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-  {
-    header: "Actions",
-    accessor: "action",
-  },
+  ...(role === "admin" || role === "teacher"
+    ? [
+        {
+          header: "Actions",
+          accessor: "action",
+        },
+      ]
+    : []),
 ];
 
+// row logic
 const renderRow = (item: ExamList) => (
   <tr
     key={item.id}
@@ -54,13 +61,12 @@ const renderRow = (item: ExamList) => (
     <td>{new Intl.DateTimeFormat("en-PK").format(item.startTime)}</td>
     <td>
       <div className="flex items-center gap-2">
-        {role === "admin" ||
-          (role === "teacher" && (
-            <>
-              <FormModal table="exam" type="update" data={item} />
-              <FormModal table="exam" type="delete" id={item.id} />
-            </>
-          ))}
+        {(role === "admin" || role === "teacher") && (
+          <>
+            <FormModal table="exam" type="update" data={item} />
+            <FormModal table="exam" type="delete" id={item.id} />
+          </>
+        )}
       </div>
     </td>
   </tr>
@@ -101,6 +107,37 @@ const ExamListPage = async ({
       }
     }
   }
+
+  // Role based fetch fetching
+  switch (role) {
+    case "admin":
+      break;
+    case "teacher":
+      query.lesson.teacherId = currentUserId!;
+      break;
+    case "student":
+      query.lesson.class = {
+        students: {
+          some: {
+            id: currentUserId!,
+          },
+        },
+      };
+      break;
+    case "parent":
+      query.lesson.class = {
+        students: {
+          some: {
+            parentId: currentUserId!,
+          },
+        },
+      };
+      break;
+
+    default:
+      break;
+  }
+
   const [examsData, count] = await prisma.$transaction([
     prisma.exam.findMany({
       where: query,
